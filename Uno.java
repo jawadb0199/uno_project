@@ -20,7 +20,7 @@ public class Uno extends Application {
     private Card played_card;
     private Stage game_stage = new Stage();
     private Deck pile;
-    private int draw = 0;
+    private int draw;
     private HBox computer_cards;
     private HBox player1cards;
     private BorderPane root;
@@ -39,7 +39,6 @@ public class Uno extends Application {
         grid.setHgap(20);
 
         Button start = new Button("New Game");
-//        start.setText("New Game");
         grid.setConstraints(start, 0, 1);
 
         Button exit = new Button();
@@ -62,7 +61,6 @@ public class Uno extends Application {
         layout.setAlignment(Pos.CENTER);
 
         Scene scene = new Scene(layout, 600, 500);
-        // window.setOnCloseRequest();
         window.setScene(scene);
         window.show();
 
@@ -77,23 +75,19 @@ public class Uno extends Application {
         pile = new Deck(true);
         while (!(played_card instanceof NumberedCard)) {
             pile.add(deck.getTopCard());
-//            played_card = pile.get(pile.size()-1);
             played_card = new NumberedCard("blue", 7);
         }
         draw = 0;
         hasDrawn = false;
     }
     private void deal(){
-//        for (int i = 1; i <= 7; i++) {
-//            player1.draw(deck.getTopCard());
-//            computer.draw(deck.getTopCard());
-//        }
-        player1.draw(new NumberedCard("blue", 7));
-        computer.draw(new NumberedCard("blue", 7));
+        for (int i = 1; i <= 7; i++) {
+            player1.draw(deck.getTopCard());
+            computer.draw(deck.getTopCard());
+        }
     }
 
 //    Do gameplay actions: skip/reverse, drawing, and switching turn_player and target_player
-
     private void nextTurn(){
         try {
             Thread.sleep(500);
@@ -281,7 +275,7 @@ public class Uno extends Application {
 
     private void addCardToLayout(Player player, Card card, int index){
         if (player == player1) {
-// Make sure this correct on initial display
+            // Make sure this correct on initial display
             ImageView card_pic = new ImageView("/cards/" + card.toString() + ".png");
             card_pic.setFitHeight(200);
             card_pic.setPreserveRatio(true);
@@ -321,42 +315,6 @@ public class Uno extends Application {
         hasDrawn = true;
         draw = 0;
         nextTurn();
-//        if (turn_player == player1) {
-//
-//            for (int i = player1.handSize(); i < player1.handSize()+n; i++) {
-//                Card card = deck.getTopCard();
-//                player1.draw(card);
-//
-//                ImageView card_pic = new ImageView("/cards/" + card.toString() + ".png");
-//                card_pic.setFitHeight(200);
-//                card_pic.setPreserveRatio(true);
-//                StackPane image_pane = new StackPane();
-//
-//                int finalI = i;
-//                card_pic.setOnMouseClicked((MouseEvent m) -> {
-//                    boolean is_valid_card = setMouseClickedHandler(finalI);
-//                    if (is_valid_card) {
-//                        player1cards.getChildren().remove(finalI);
-//                    }
-//                });
-//
-//                image_pane.getChildren().add(card_pic);
-//                image_pane.setOnMouseEntered((MouseEvent m) -> image_pane.setStyle("-fx-border-color: black"));
-//                image_pane.setOnMouseExited((MouseEvent m) -> image_pane.setStyle(""));
-//
-//                player1cards.getChildren().add(image_pane);
-//
-//            }
-//        } else {
-//            for (int i = computer.handSize(); i < computer.handSize()+n; i++) {
-//                computer.draw(deck.getTopCard());
-//
-//                ImageView card_pic = new ImageView("/cards/card_back.png");
-//                card_pic.setFitHeight(200);
-//                card_pic.setPreserveRatio(true);
-//                computer_cards.getChildren().add(card_pic);
-//            }
-//        }
     }
 
     private void computerTurn(){
@@ -368,7 +326,6 @@ public class Uno extends Application {
                     ((WildCard) card).setColor(colors[(int) (Math.random() * 4)]);
                 }
                 playCard(i);
-//                turn ++;
                 computer_cards.getChildren().remove(i);
                 hasDrawn = false;
                 break;
@@ -438,58 +395,4 @@ public class Uno extends Application {
             swapPlayers();
         }
     }
-////
 }
-//        boolean isValidMove = false;
-//        String error_str = "";
-//        if (draw > 0) {
-//            if (card instanceof ActionCard) {
-//
-//                ActionCard act_card = (ActionCard) card;
-//                if (act_card.getAction().equals("draw2")) {
-//                    isValidMove = true;
-//                    draw += 2;
-//                }
-//
-//            } else if (card instanceof WildCard) {
-//
-//                WildCard wild_card = (WildCard) card;
-//                if (wild_card.isDraw4()) {
-//                    draw += 4;
-//                    isValidMove = true;
-//                }
-//
-//            } else {
-//                isValidMove = false;
-//                error_str = ". Must play a draw card.";
-//            }
-//        } else if (card.getColor().equals(played_card.getColor())) {
-//            isValidMove = true;
-//        } else if (card instanceof ActionCard) {
-//
-//            ActionCard act_card = (ActionCard) card;
-//            ActionCard act_played_card = (ActionCard) played_card;
-//            if (act_card.getAction().equals(act_played_card.getAction())) {
-//                isValidMove = true;
-//                if (act_card.getAction().equals("draw2")) {
-//                    draw += 2;
-//                }
-//            }
-//
-//        } else if (card instanceof NumberedCard) {
-//
-//            NumberedCard num_card = (NumberedCard) card;
-//            NumberedCard num_played_card = (NumberedCard)played_card;
-//            if (num_card.getNumber() == num_played_card.getNumber()){
-//                isValidMove = true;
-//            }
-//
-//        } else if (card instanceof WildCard) {
-//
-//            WildCard wild_card = (WildCard) card;
-//            isValidMove = true;
-//            if (wild_card.isDraw4()) {
-//                draw += 4;
-//            }
-//
-//        }
