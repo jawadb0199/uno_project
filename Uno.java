@@ -20,7 +20,6 @@ public class Uno extends Application {
     private Card played_card;
     private Stage game_stage = new Stage();
     private Deck pile;
-    private int turn = 0;
     private int draw = 0;
     private HBox computer_cards;
     private HBox player1cards;
@@ -48,12 +47,12 @@ public class Uno extends Application {
         grid.setConstraints(exit, 1, 1);
 
         start.setOnAction(e -> {
-            startGame();
             window.close();
+            startGame();
             displayGame();
             nextTurn();
         });
-        exit.setOnAction((ActionEvent e) -> window.close());
+        exit.setOnAction(e -> window.close());
 
         grid.setAlignment(Pos.CENTER);
         grid.getChildren().addAll(start, exit);
@@ -70,100 +69,91 @@ public class Uno extends Application {
     }
     private void startGame(){
         deck = new Deck();
-        player1 = new Player();
+        player1 = new Player("Player 1");
         target_player = player1;
-        computer = new Player();
+        computer = new Player("Computer");
         turn_player = computer;
         deal();
         pile = new Deck(true);
         while (!(played_card instanceof NumberedCard)) {
             pile.add(deck.getTopCard());
-            played_card = pile.get(pile.size()-1);
+//            played_card = pile.get(pile.size()-1);
+            played_card = new NumberedCard("blue", 7);
         }
-        turn = 0;
+        draw = 0;
+        hasDrawn = false;
     }
     private void deal(){
-        for (int i = 1; i <= 7; i++) {
-            player1.draw(deck.getTopCard());
-            computer.draw(deck.getTopCard());
-        }
+//        for (int i = 1; i <= 7; i++) {
+//            player1.draw(deck.getTopCard());
+//            computer.draw(deck.getTopCard());
+//        }
+        player1.draw(new NumberedCard("blue", 7));
+        computer.draw(new NumberedCard("blue", 7));
     }
-
-//    private void runGame(){
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException i) {
-//            i.printStackTrace();
-//        }
-//        if (turn_player.handSize() > 0 && turn_player.handSize() > 0) {
-////        while (turn_player.handSize() > 0 && turn_player.handSize() > 0) {
-//            turn ++;
-//
-//            if (played_card instanceof ActionCard) {
-//                if (!(((ActionCard) played_card).getAction().equals("reverse") || ((ActionCard) played_card).getAction().equals("skip"))) {
-//                    swapPlayers();
-//                }
-//            } else {
-//                swapPlayers();
-//            }
-//
-//            if (hasValidMove()) {
-//                if (turn_player == computer) {
-//                    computerTurn();
-//                }
-//            } else {
-//                if (draw > 0) {
-//                    playerDraw(draw);
-//                    draw = 0;
-//                } else {
-//                    playerDraw(1);
-//                }
-//            }
-//
-//        } else {
-//
-//            game_stage.close();
-//        }
-//    }
 
 //    Do gameplay actions: skip/reverse, drawing, and switching turn_player and target_player
 
     private void nextTurn(){
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         if (!(hasDrawn)) {
             doAction(played_card);
-        }
-        if (player1.handSize() > 0 && computer.handSize() > 0) {
-            if (hasValidMove()) {
-                if (turn_player == computer) {
-                    computerTurn();
-                }
-                hasDrawn = false;
-            } else {
-                if (draw > 0) {
-                    playerDraw(draw);
-                    draw = 0;
-                } else {
-                    playerDraw(1);
-                }
-                hasDrawn = true;
-
-            }
         } else {
+            swapPlayers();
+        }
+        refreshLayout(turn_player);
+
+        if (target_player.handSize() == 0) {
             if (draw > 0) {
-                if (hasValidMove()) {
+                if (hasValidMove(turn_player)) {
                     if (turn_player == computer) {
                         computerTurn();
                     }
                     hasDrawn = false;
                 } else {
-                    playerDraw(draw);
-                    draw = 0;
+                    playerDraw(turn_player, draw);
                     hasDrawn = true;
+
+                    PopUpWindow.display("Game Over. " + target_player.toString() + " has won");
+                    endGame();
                 }
 
             } else {
-                YesNoBox.display("Game Over", "");
+                PopUpWindow.display("Game Over. " + target_player.toString() + " has won");
+                endGame();
             }
+        } else if (turn_player.handSize() == 0) {
+            PopUpWindow.display("Game Over. " + turn_player.toString() + " has won");
+            endGame();
+        } else {
+            if (hasValidMove(turn_player)) {
+                if (turn_player == computer) {
+                    computerTurn();
+                } else {
+                    hasDrawn = false;
+                }
+            } else {
+                if (draw > 0) {
+                    playerDraw(turn_player, draw);
+                } else {
+                    playerDraw(turn_player, 1);
+                }
+            }
+        }
+    }
+
+    private void refreshLayout(Player player){
+        if (player == player1) {
+            player1cards.getChildren().clear();
+        } else {
+            computer_cards.getChildren().clear();
+        }
+        for (int i = 0; i < player.handSize(); i++) {
+            addCardToLayout(player, player.get(i), i);
         }
     }
 
@@ -171,6 +161,19 @@ public class Uno extends Application {
         Player temp = turn_player;
         turn_player = target_player;
         target_player = temp;
+    }
+
+    private void endGame(){
+        player1cards = null;
+        computer_cards = null;
+        player1 = null;
+        computer = null;
+        game_stage.close();
+        try {
+            start(new Stage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void displayGame(){
@@ -186,27 +189,7 @@ public class Uno extends Application {
         player1cards.setAlignment(Pos.CENTER);
 
         for (int i = 0; i < player1.handSize(); i++) {
-
-//            ImageView card_pic = new ImageView("/cards/" + player1.get(i).toString() + ".png");
-//            card_pic.setFitHeight(200);
-//            card_pic.setPreserveRatio(true);
-//            StackPane image_pane = new StackPane();
-//
-//            int finalI = i;
-//            card_pic.setOnMouseClicked((MouseEvent m) -> {
-//                boolean is_valid_card = setMouseClickedHandler(finalI);
-//                if (is_valid_card) {
-//                    player1cards.getChildren().remove(finalI);
-//                }
-//            });
-//            image_pane.getChildren().add(card_pic);
-//            image_pane.setOnMouseEntered((MouseEvent m) -> image_pane.setStyle("-fx-border-color: black"));
-//            image_pane.setOnMouseExited((MouseEvent m) -> image_pane.setStyle(""));
-//
-//            player1cards.getChildren().add(image_pane);
             addCardToLayout(player1, player1.get(i), i);
-
-
         }
         root.setBottom(player1cards);
 
@@ -216,10 +199,6 @@ public class Uno extends Application {
 
         for (int i = 0; i < computer.handSize(); i++) {
             addCardToLayout(computer, computer.get(i), i);
-//            ImageView card_pic = new ImageView("/cards/card_back.png");
-//            card_pic.setFitHeight(200);
-//            card_pic.setPreserveRatio(true);
-//            computer_cards.getChildren().add(card_pic);
         }
         root.setTop(computer_cards);
 
@@ -246,62 +225,12 @@ public class Uno extends Application {
 
     }
 //    Checks if at least 1 of turn_player's cards is a valid move
-    private boolean hasValidMove(){
-        for (int i = 0; i < turn_player.handSize(); i++) {
-            if (isValidMove(turn_player.get(i))) {
+    private boolean hasValidMove(Player player){
+        for (int i = 0; i < player.handSize(); i++) {
+            if (isValidMove(player.get(i))) {
                 return true;
             }
         }
-//        if (draw > 0) {
-//            for (int i = 0; i < turn_player.handSize(); i++) {
-//                Card card = turn_player.get(i);
-//                if (card instanceof WildCard) {
-//                    if (((WildCard) card).isDraw4()) {
-//                        return true;
-//                    }
-//                } else if (card instanceof ActionCard) {
-//                    if (((ActionCard) card).getAction().equals("draw2")) {
-//                        return true;
-//                    }
-//                }
-//            }
-//            return false;
-//        } else {
-//            for (int i = 0; i < turn_player.handSize(); i++) {
-//                Card card = turn_player.get(i);
-//                if (card instanceof WildCard) {
-//                    return true;
-//                } else if (card.getColor().equals(played_card.getColor())) {
-//                    return true;
-//                } else if (card instanceof ActionCard) {
-//
-//                    ActionCard act_card = (ActionCard) card;
-//                    ActionCard act_played_card;
-//                    try {
-//                        act_played_card = (ActionCard) played_card;
-//                    } catch (Exception e) {
-//                        return false;
-//                    }
-//                    if (act_card.getAction().equals(act_played_card.getAction())) {
-//                        return true;
-//                    }
-//
-//                } else if (card instanceof NumberedCard) {
-//
-//                    NumberedCard num_card = (NumberedCard) card;
-//                    NumberedCard num_played_card;
-//                    try {
-//                        num_played_card = (NumberedCard) played_card;
-//                    } catch (Exception e) {
-//                        return false;
-//                    }
-//                    if (num_card.getNumber() == num_played_card.getNumber()) {
-//                        return true;
-//                    }
-//                }
-//
-//            }
-//        }
         return false;
     }
 
@@ -310,7 +239,7 @@ public class Uno extends Application {
             if (card instanceof ActionCard) {
 
                 ActionCard act_card = (ActionCard) card;
-                if (act_card.getAction().equals("draw2")) {
+                if (act_card.getAction().equals("draw2") || act_card.getColor().equals(played_card.getColor())) {
                     return true;
                 }
 
@@ -361,11 +290,6 @@ public class Uno extends Application {
                 boolean is_valid_card = setMouseClickedHandler(index);
                 if (is_valid_card) {
                     player1cards.getChildren().remove(index);
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                     nextTurn();
                 }
             });
@@ -387,17 +311,16 @@ public class Uno extends Application {
         }
     }
 
-    private void playerDraw(int n){
-//        for (int i = 1; i <= n; i++) {
-//            Card card = deck.getTopCard();
-//            turn_player.draw(card);
-//            turn_player_cards.getChildren().add(card);
-//        }
-        for (int i = turn_player.handSize(); i < turn_player.handSize()+n-1; i++) {
+    private void playerDraw(Player player, int n){
+        int hand_size = player.handSize();
+        for (int i = hand_size; i < hand_size+n; i++) {
             Card card = deck.getTopCard();
-            turn_player.draw(card);
-            addCardToLayout(turn_player, card, i);
+            player.draw(card);
+            addCardToLayout(player, card, i);
         }
+        hasDrawn = true;
+        draw = 0;
+        nextTurn();
 //        if (turn_player == player1) {
 //
 //            for (int i = player1.handSize(); i < player1.handSize()+n; i++) {
@@ -447,6 +370,7 @@ public class Uno extends Application {
                 playCard(i);
 //                turn ++;
                 computer_cards.getChildren().remove(i);
+                hasDrawn = false;
                 break;
 
             }
@@ -463,9 +387,9 @@ public class Uno extends Application {
             return true;
         } else {
             if (draw > 2) {
-                ErrorWindow.display(String.format("Invalid Move%s", ". Must play a draw card."));
+                PopUpWindow.display(String.format("Invalid Move%s", ". Must play a draw card."));
             } else {
-                ErrorWindow.display("Invalid Move");
+                PopUpWindow.display(String.format("Invalid Move%s", ". Cannot play that card."));
             }
             return false;
         }

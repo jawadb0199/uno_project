@@ -38,6 +38,9 @@ public class Player{
             return null;
         }
     }
+    public String toString(){
+        return name;
+    }
     public boolean hasDrawCard() {
         for (int i = 0; i < hand.size(); i++) {
             Card card = hand.get(i);
